@@ -146,14 +146,14 @@ func _toggle_pause() -> void:
 	if sim.game_over:
 		return
 	paused = not paused
-	_pause_button.text = "▶ Continuar" if paused else "⏸ Pausar"
+	_pause_button.text = "▶ Continuar" if paused else "|| Pausar"
 
 
 func _on_restart_pressed() -> void:
 	_new_game()
 	_overlay.visible = false
 	paused = false
-	_pause_button.text = "⏸ Pausar"
+	_pause_button.text = "|| Pausar"
 
 
 # ================================================================ render
@@ -284,7 +284,7 @@ func _show_game_over() -> void:
 	if not assisted and sim.score > best_score:
 		best_score = sim.score
 		_save_best()
-		record = "\n[color=#ffd23f]★ NOVO RECORDE! ★[/color]\n"
+		record = "\n[color=#ffd23f]*** NOVO RECORDE! ***[/color]\n"
 	var avg_turnaround := sim.turnaround_total / sim.completed if sim.completed > 0 else 0.0
 	_overlay_text.text = """[color=#ff5a5a][font_size=26]KERNEL PANIC[/font_size][/color]
 O usuário perdeu a paciência com o sistema.
@@ -312,7 +312,7 @@ func _on_overlay_button() -> void:
 		_new_game()
 	_overlay.visible = false
 	paused = false
-	_pause_button.text = "⏸ Pausar"
+	_pause_button.text = "|| Pausar"
 
 
 func _load_best() -> void:
