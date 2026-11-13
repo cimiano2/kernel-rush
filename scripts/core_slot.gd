@@ -1,89 +1,70 @@
 class_name CoreSlot
 extends PanelContainer
-## Um núcleo da CPU. Aceita cartões arrastados e cliques.
+## Um núcleo da CPU (cena: scenes/core_slot.tscn). Aceita cartões arrastados e cliques.
 
 signal clicked(index: int)
 signal dropped(pid: int, index: int)
 
-var index := 0
-var _title: Label
-var _state: Label
-var _name: Label
-var _bar: ProgressBar
-var _detail: Label
-var _hover := false
-var _blink := 0.0
+## Índice do núcleo (0..3). Definido no inspetor de cada instância em main.tscn.
+@export var index: int = 0
+
+var _hover: bool = false
+var _blink: float = 0.0
+
+@onready var _title_label: Label = %TitleLabel
+@onready var _proc_label: Label = %ProcLabel
+@onready var _bar: ProgressBar = %ProgressBar
+@onready var _state_label: Label = %StateLabel
+@onready var _detail_label: Label = %DetailLabel
 
 
-func setup(i: int) -> void:
-	index = i
-	custom_minimum_size = Vector2(170, 150)
-	size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	mouse_filter = Control.MOUSE_FILTER_STOP
-	mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-
-	var v := VBoxContainer.new()
-	v.add_theme_constant_override("separation", 6)
-	v.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(v)
-	_title = UIStyle.label("CPU %d" % (i + 1), 12, UIStyle.MUTED)
-	v.add_child(_title)
-	_name = UIStyle.label("", 16, UIStyle.TEXT)
-	v.add_child(_name)
-	_bar = UIStyle.bar(UIStyle.CYAN, 10)
-	v.add_child(_bar)
-	_state = UIStyle.label("", 12, UIStyle.MUTED)
-	_state.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	v.add_child(_state)
-	_detail = UIStyle.label("", 11, UIStyle.MUTED)
-	v.add_child(_detail)
-
-	mouse_exited.connect(func(): _hover = false)
+func _ready() -> void:
+	_title_label.text = "CPU %d" % (index + 1)
+	mouse_exited.connect(func() -> void: _hover = false)
 
 
-func refresh(core: Dictionary, unlocked: bool, now: float, delta_vis: float) -> void:
+func refresh(core: Dictionary, unlocked: bool, now: float, delta: float) -> void:
 	var p: Sim.Proc = core.proc
+	_state_label.modulate.a = 1.0
 	if not unlocked:
 		modulate.a = 0.35
-		_name.text = "BLOQUEADO"
-		_name.add_theme_color_override("font_color", UIStyle.MUTED)
-		_state.text = "Libera em nível mais alto"
-		_bar.visible = false
-		_detail.text = ""
-		add_theme_stylebox_override("panel", UIStyle.box(Color("0d1229"), UIStyle.LINE, 2, -1, 10))
+		_show_empty("BLOQUEADO", "Libera em nível mais alto", UIStyle.LINE, 2)
 		return
 	modulate.a = 1.0
-	var border := UIStyle.YELLOW if _hover else UIStyle.LINE
 	if p == null:
-		_name.text = "ocioso"
-		_name.add_theme_color_override("font_color", UIStyle.MUTED)
-		_state.text = "Solte um processo aqui"
-		_bar.visible = false
-		_detail.text = ""
-		add_theme_stylebox_override("panel", UIStyle.box(Color("0d1229"), border, 2, -1, 10))
+		_show_empty("ocioso", "Solte um processo aqui", UIStyle.YELLOW if _hover else UIStyle.LINE, 2)
 		return
 
-	_name.text = "%s #%d" % [p.name, p.pid]
-	_name.add_theme_color_override("font_color", p.color)
+	_proc_label.text = "%s #%d" % [p.name, p.pid]
+	_proc_label.add_theme_color_override("font_color", p.color)
 	_bar.visible = true
 	UIStyle.set_bar_color(_bar, p.color)
 	_bar.value = 1.0 - clampf(p.remaining / p.burst, 0.0, 1.0)
 	if core.switching > 0.0:
-		_blink += delta_vis
-		_state.text = "TROCA DE CONTEXTO..."
-		_state.add_theme_color_override("font_color", UIStyle.YELLOW)
-		_state.modulate.a = 0.4 + 0.6 * absf(sin(_blink * 10.0))
+		_blink += delta
+		_state_label.text = "TROCA DE CONTEXTO..."
+		_state_label.add_theme_color_override("font_color", UIStyle.YELLOW)
+		_state_label.modulate.a = 0.4 + 0.6 * absf(sin(_blink * 10.0))
 	else:
-		_state.modulate.a = 1.0
-		_state.text = "executando"
-		_state.add_theme_color_override("font_color", UIStyle.GREEN)
-	var d := "resta %.1fs · fatia %.1fs" % [maxf(p.remaining, 0.0), core.slice]
+		_state_label.text = "executando"
+		_state_label.add_theme_color_override("font_color", UIStyle.GREEN)
+	var detail := "resta %.1fs · fatia %.1fs" % [maxf(p.remaining, 0.0), core.slice]
 	if p.kind == "io":
-		d += "\nE/S em %.1fs" % maxf(p.until_io, 0.0)
-	if p.kind == "rt":
-		d += "\nPRAZO %.1fs" % (p.deadline - now)
-	_detail.text = d
-	add_theme_stylebox_override("panel", UIStyle.box(Color("101634"), UIStyle.YELLOW if _hover else p.color, 3, -1, 10))
+		detail += "\nE/S em %.1fs" % maxf(p.until_io, 0.0)
+	elif p.kind == "rt":
+		detail += "\nPRAZO %.1fs" % (p.deadline - now)
+	_detail_label.text = detail
+	UIStyle.set_border(self, "panel", UIStyle.YELLOW if _hover else p.color, 3)
+
+
+func _show_empty(title: String, state: String, border: Color, width: int) -> void:
+	_proc_label.text = title
+	_proc_label.add_theme_color_override("font_color", UIStyle.MUTED)
+	_state_label.text = state
+	_state_label.add_theme_color_override("font_color", UIStyle.MUTED)
+	_bar.visible = false
+	_detail_label.text = ""
+	UIStyle.set_border(self, "panel", border, width)
 
 
 func _gui_input(event: InputEvent) -> void:
@@ -93,13 +74,13 @@ func _gui_input(event: InputEvent) -> void:
 		clicked.emit(index)
 
 
-func _can_drop_data(_at: Vector2, data: Variant) -> bool:
+func _can_drop_data(_at_position: Vector2, data: Variant) -> bool:
 	var ok: bool = data is Dictionary and data.has("pid")
 	_hover = ok
 	return ok
 
 
-func _drop_data(_at: Vector2, data: Variant) -> void:
+func _drop_data(_at_position: Vector2, data: Variant) -> void:
 	_hover = false
 	dropped.emit(int(data.pid), index)
 

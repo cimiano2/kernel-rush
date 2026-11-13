@@ -6,11 +6,6 @@ extends RefCounted
 signal logged(text: String, kind: String)        # kind: ok | bad | info
 signal popped(text: String, color: Color, where: String, index: int)
 
-const TICK := 0.1            # segundos simulados por passo
-const CTX_SWITCH := 0.4      # custo de uma troca de contexto
-const MAX_QUEUE := 12        # acima disso a fila "transborda"
-const LEVEL_TIME := 45.0     # segundos por nível
-const RR_QUANTUM := 1.5      # quantum do piloto automático Round Robin
 const MAX_CORES := 4
 
 const C_CYAN := Color("34e7e4")
@@ -49,6 +44,7 @@ class Proc:
 	var ever_starved := false
 
 
+var cfg: SimConfig
 var rng := RandomNumberGenerator.new()
 var time := 0.0
 var level := 1
@@ -71,7 +67,8 @@ var blocked: Array[Proc] = []
 var cores: Array[Dictionary] = []   # {proc: Proc|null, switching: float, slice: float}
 
 
-func _init(seed_value: int = -1) -> void:
+func _init(seed_value: int = -1, config: SimConfig = null) -> void:
+	cfg = config if config != null else SimConfig.new()
 	if seed_value >= 0:
 		rng.seed = seed_value
 	else:
@@ -81,11 +78,11 @@ func _init(seed_value: int = -1) -> void:
 
 
 func unlocked_cores() -> int:
-	if level >= 5:
-		return 4
-	if level >= 3:
-		return 3
-	return 2
+	var n := 0
+	for lvl in cfg.core_unlock_levels:
+		if level >= lvl:
+			n += 1
+	return clampi(n, 1, MAX_CORES)
 
 
 func avg_wait() -> float:
@@ -104,10 +101,10 @@ func find_ready(pid: int) -> Proc:
 func tick() -> void:
 	if game_over:
 		return
-	time += TICK
+	time += cfg.tick
 	_update_level()
 
-	spawn_timer -= TICK
+	spawn_timer -= cfg.tick
 	if spawn_timer <= 0.0:
 		_spawn()
 		spawn_timer = _spawn_interval()
@@ -122,21 +119,21 @@ func tick() -> void:
 		if p == null:
 			continue
 		if c.switching > 0.0:
-			c.switching = maxf(0.0, c.switching - TICK)
+			c.switching = maxf(0.0, c.switching - cfg.tick)
 			continue
-		p.remaining -= TICK
-		c.slice += TICK
+		p.remaining -= cfg.tick
+		c.slice += cfg.tick
 		if p.kind == "io":
-			p.until_io -= TICK
+			p.until_io -= cfg.tick
 		if p.remaining <= 0.0001:
 			_complete(i)
 		elif p.kind == "io" and p.until_io <= 0.0001:
 			_block(i)
-		elif autopilot == "rr" and c.slice >= RR_QUANTUM and not ready.is_empty():
+		elif autopilot == "rr" and c.slice >= cfg.rr_quantum and not ready.is_empty():
 			preempt(i)
 
 	for p in blocked.duplicate():
-		p.io_left -= TICK
+		p.io_left -= cfg.tick
 		if p.io_left <= 0.0:
 			blocked.erase(p)
 			p.until_io = p.io_every
@@ -150,9 +147,9 @@ func tick() -> void:
 				p.starving = true
 				p.ever_starved = true
 				logged.emit("%s (%d) está passando fome!" % [p.name, p.pid], "bad")
-			satisfaction -= 2.0 * TICK
-	if ready.size() > MAX_QUEUE:
-		satisfaction -= 4.0 * TICK
+			satisfaction -= cfg.starvation_drain * cfg.tick
+	if ready.size() > cfg.max_queue:
+		satisfaction -= cfg.overflow_drain * cfg.tick
 
 	_check_deadlines()
 
@@ -181,7 +178,7 @@ func assign(pid: int, core_index: int) -> bool:
 	p.starving = false
 	var c: Dictionary = cores[core_index]
 	c.proc = p
-	c.switching = CTX_SWITCH
+	c.switching = cfg.ctx_switch
 	c.slice = 0.0
 	ctx_switches += 1
 	return true
@@ -202,7 +199,7 @@ func preempt(core_index: int) -> void:
 # ------------------------------------------------------------------ interno
 
 func _update_level() -> void:
-	var new_level := 1 + int(time / LEVEL_TIME)
+	var new_level := 1 + int(time / cfg.level_time)
 	if new_level != level:
 		var before := unlocked_cores()
 		level = new_level
@@ -210,14 +207,14 @@ func _update_level() -> void:
 		popped.emit("NÍVEL %d" % level, C_YELLOW, "center", 0)
 		if unlocked_cores() > before:
 			logged.emit("Novo núcleo de CPU liberado!", "ok")
-		if level == 2:
+		if level == cfg.io_from_level:
 			logged.emit("Novo: processos de E/S (bloqueiam e voltam).", "ok")
-		elif level == 3:
+		if level == cfg.rt_from_level:
 			logged.emit("Novo: processos de TEMPO REAL com prazo!", "ok")
 
 
 func _spawn_interval() -> float:
-	var base := maxf(0.4, 2.8 - 0.3 * (level - 1))
+	var base := maxf(cfg.spawn_min, cfg.spawn_base - cfg.spawn_step * (level - 1))
 	return base * rng.randf_range(0.6, 1.4)
 
 
@@ -226,9 +223,9 @@ func _spawn() -> void:
 	p.pid = next_pid
 	next_pid += 1
 	var r := rng.randf()
-	if level >= 3 and r < 0.18:
+	if level >= cfg.rt_from_level and r < 0.18:
 		p.kind = "rt"
-	elif level >= 2 and r < 0.48:
+	elif level >= cfg.io_from_level and r < 0.48:
 		p.kind = "io"
 	else:
 		p.kind = "cpu"
@@ -257,7 +254,7 @@ func _spawn() -> void:
 	p.remaining = p.burst
 	p.arrival = time
 	if p.kind == "rt":
-		p.deadline = time + p.burst + CTX_SWITCH + rng.randf_range(2.5, 4.5)
+		p.deadline = time + p.burst + cfg.ctx_switch + rng.randf_range(2.5, 4.5)
 	_enqueue(p)
 
 
@@ -278,7 +275,7 @@ func _complete(core_index: int) -> void:
 	if not p.ever_starved:
 		pts += 50
 	score += pts
-	satisfaction = minf(100.0, satisfaction + 3.0)
+	satisfaction = minf(100.0, satisfaction + cfg.completion_bonus)
 	logged.emit("%s (%d) concluído +%d" % [p.name, p.pid, pts], "ok")
 	popped.emit("+%d" % pts, C_GREEN, "core", core_index)
 
@@ -309,9 +306,9 @@ func _check_deadlines() -> void:
 
 func _miss(p: Proc, core_index: int) -> void:
 	missed += 1
-	satisfaction -= 15.0
+	satisfaction -= cfg.deadline_penalty
 	score = maxi(0, score - 100)
-	logged.emit("PRAZO PERDIDO: %s (%d)! −15 satisfação" % [p.name, p.pid], "bad")
+	logged.emit("PRAZO PERDIDO: %s (%d)! −%d satisfação" % [p.name, p.pid, int(cfg.deadline_penalty)], "bad")
 	if core_index >= 0:
 		popped.emit("PRAZO!", C_RED, "core", core_index)
 	else:

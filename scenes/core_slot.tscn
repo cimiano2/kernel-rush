@@ -1,0 +1,49 @@
+[gd_scene load_steps=2 format=3 uid="uid://cq2c0reslot01"]
+
+[ext_resource type="Script" path="res://scripts/core_slot.gd" id="1_core"]
+
+[node name="CoreSlot" type="PanelContainer"]
+custom_minimum_size = Vector2(170, 150)
+size_flags_horizontal = 3
+mouse_default_cursor_shape = 2
+theme_type_variation = &"CoreSlot"
+script = ExtResource("1_core")
+
+[node name="Content" type="VBoxContainer" parent="."]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 6
+
+[node name="TitleLabel" type="Label" parent="Content"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"MutedLabel"
+text = "CPU 1"
+
+[node name="ProcLabel" type="Label" parent="Content"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"ProcName"
+text = "ocioso"
+
+[node name="ProgressBar" type="ProgressBar" parent="Content"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 10)
+layout_mode = 2
+mouse_filter = 2
+max_value = 1.0
+step = 0.0
+show_percentage = false
+
+[node name="StateLabel" type="Label" parent="Content"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"MutedLabel"
+theme_override_font_sizes/font_size = 12
+text = "Solte um processo aqui"
+autowrap_mode = 3
+
+[node name="DetailLabel" type="Label" parent="Content"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"MutedLabel"

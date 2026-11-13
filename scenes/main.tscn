@@ -1,6 +1,19 @@
-[gd_scene load_steps=2 format=3 uid="uid://c8k3rnlmain01"]
+[gd_scene load_steps=6 format=3 uid="uid://c8k3rnlmain01"]
 
 [ext_resource type="Script" path="res://scripts/main.gd" id="1_main"]
+[ext_resource type="PackedScene" path="res://scenes/core_slot.tscn" id="2_core"]
+[ext_resource type="Shader" path="res://shaders/crt.gdshader" id="3_crt"]
+[ext_resource type="Resource" path="res://resources/sim_config.tres" id="4_cfg"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_crt"]
+shader = ExtResource("3_crt")
+shader_parameter/curvature = 0.03
+shader_parameter/scanline_intensity = 0.07
+shader_parameter/scanline_count = 360.0
+shader_parameter/vignette_power = 0.25
+shader_parameter/aberration = 0.001
+shader_parameter/flicker = 0.012
+shader_parameter/glitch = 0.0
 
 [node name="Main" type="Control"]
 layout_mode = 3
@@ -10,3 +23,395 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_main")
+config = ExtResource("4_cfg")
+
+[node name="Background" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.0431373, 0.0588235, 0.117647, 1)
+
+[node name="Layout" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 14
+theme_override_constants/margin_top = 14
+theme_override_constants/margin_right = 14
+theme_override_constants/margin_bottom = 14
+
+[node name="Rows" type="VBoxContainer" parent="Layout"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Header" type="HBoxContainer" parent="Layout/Rows"]
+layout_mode = 2
+theme_override_constants/separation = 22
+
+[node name="Logo" type="RichTextLabel" parent="Layout/Rows/Header"]
+custom_minimum_size = Vector2(210, 0)
+layout_mode = 2
+size_flags_vertical = 4
+theme_override_font_sizes/normal_font_size = 24
+bbcode_enabled = true
+text = "[color=#34e7e4]KERNEL[/color][color=#ff4fa3]//[/color][color=#34e7e4]RUSH[/color]"
+fit_content = true
+scroll_active = false
+autowrap_mode = 0
+
+[node name="TimeStat" type="VBoxContainer" parent="Layout/Rows/Header"]
+layout_mode = 2
+size_flags_vertical = 4
+theme_override_constants/separation = 0
+
+[node name="Caption" type="Label" parent="Layout/Rows/Header/TimeStat"]
+layout_mode = 2
+theme_type_variation = &"CaptionLabel"
+text = "TEMPO"
+
+[node name="TimeStatValue" type="Label" parent="Layout/Rows/Header/TimeStat"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"StatValue"
+text = "0.0s"
+
+[node name="LevelStat" type="VBoxContainer" parent="Layout/Rows/Header"]
+layout_mode = 2
+size_flags_vertical = 4
+theme_override_constants/separation = 0
+
+[node name="Caption" type="Label" parent="Layout/Rows/Header/LevelStat"]
+layout_mode = 2
+theme_type_variation = &"CaptionLabel"
+text = "NÍVEL"
+
+[node name="LevelStatValue" type="Label" parent="Layout/Rows/Header/LevelStat"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"StatValue"
+text = "1"
+
+[node name="ScoreStat" type="VBoxContainer" parent="Layout/Rows/Header"]
+layout_mode = 2
+size_flags_vertical = 4
+theme_override_constants/separation = 0
+
+[node name="Caption" type="Label" parent="Layout/Rows/Header/ScoreStat"]
+layout_mode = 2
+theme_type_variation = &"CaptionLabel"
+text = "PONTOS"
+
+[node name="ScoreStatValue" type="Label" parent="Layout/Rows/Header/ScoreStat"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"StatValue"
+text = "0"
+
+[node name="DoneStat" type="VBoxContainer" parent="Layout/Rows/Header"]
+layout_mode = 2
+size_flags_vertical = 4
+theme_override_constants/separation = 0
+
+[node name="Caption" type="Label" parent="Layout/Rows/Header/DoneStat"]
+layout_mode = 2
+theme_type_variation = &"CaptionLabel"
+text = "CONCLUÍDOS"
+
+[node name="DoneStatValue" type="Label" parent="Layout/Rows/Header/DoneStat"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"StatValue"
+text = "0"
+
+[node name="WaitStat" type="VBoxContainer" parent="Layout/Rows/Header"]
+layout_mode = 2
+size_flags_vertical = 4
+theme_override_constants/separation = 0
+
+[node name="Caption" type="Label" parent="Layout/Rows/Header/WaitStat"]
+layout_mode = 2
+theme_type_variation = &"CaptionLabel"
+text = "ESPERA MÉDIA"
+
+[node name="WaitStatValue" type="Label" parent="Layout/Rows/Header/WaitStat"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"StatValue"
+text = "0.0s"
+
+[node name="CtxStat" type="VBoxContainer" parent="Layout/Rows/Header"]
+layout_mode = 2
+size_flags_vertical = 4
+theme_override_constants/separation = 0
+
+[node name="Caption" type="Label" parent="Layout/Rows/Header/CtxStat"]
+layout_mode = 2
+theme_type_variation = &"CaptionLabel"
+text = "TROCAS CTX"
+
+[node name="CtxStatValue" type="Label" parent="Layout/Rows/Header/CtxStat"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"StatValue"
+text = "0"
+
+[node name="Satisfaction" type="VBoxContainer" parent="Layout/Rows/Header"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+
+[node name="Caption" type="Label" parent="Layout/Rows/Header/Satisfaction"]
+layout_mode = 2
+theme_type_variation = &"CaptionLabel"
+text = "SATISFAÇÃO DO USUÁRIO"
+
+[node name="SatisfactionBar" type="ProgressBar" parent="Layout/Rows/Header/Satisfaction"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 16)
+layout_mode = 2
+mouse_filter = 2
+max_value = 1.0
+step = 0.0
+value = 1.0
+show_percentage = false
+
+[node name="Body" type="HBoxContainer" parent="Layout/Rows"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 14
+
+[node name="ReadyPanel" type="PanelContainer" parent="Layout/Rows/Body"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="VBox" type="VBoxContainer" parent="Layout/Rows/Body/ReadyPanel"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="Head" type="HBoxContainer" parent="Layout/Rows/Body/ReadyPanel/VBox"]
+layout_mode = 2
+
+[node name="Title" type="Label" parent="Layout/Rows/Body/ReadyPanel/VBox/Head"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"TitleLabel"
+text = "FILA DE PRONTOS"
+
+[node name="QueueCount" type="Label" parent="Layout/Rows/Body/ReadyPanel/VBox/Head"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"MutedLabel"
+theme_override_font_sizes/font_size = 12
+text = "0/12"
+
+[node name="Scroll" type="ScrollContainer" parent="Layout/Rows/Body/ReadyPanel/VBox"]
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="ReadyList" type="VBoxContainer" parent="Layout/Rows/Body/ReadyPanel/VBox/Scroll"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 8
+
+[node name="CpuPanel" type="PanelContainer" parent="Layout/Rows/Body"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 1.4
+
+[node name="VBox" type="VBoxContainer" parent="Layout/Rows/Body/CpuPanel"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="Title" type="Label" parent="Layout/Rows/Body/CpuPanel/VBox"]
+layout_mode = 2
+theme_type_variation = &"TitleLabel"
+text = "NÚCLEOS DA CPU"
+
+[node name="CoreGrid" type="GridContainer" parent="Layout/Rows/Body/CpuPanel/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/h_separation = 12
+theme_override_constants/v_separation = 12
+columns = 2
+
+[node name="Core1" parent="Layout/Rows/Body/CpuPanel/VBox/CoreGrid" instance=ExtResource("2_core")]
+layout_mode = 2
+index = 0
+
+[node name="Core2" parent="Layout/Rows/Body/CpuPanel/VBox/CoreGrid" instance=ExtResource("2_core")]
+layout_mode = 2
+index = 1
+
+[node name="Core3" parent="Layout/Rows/Body/CpuPanel/VBox/CoreGrid" instance=ExtResource("2_core")]
+layout_mode = 2
+index = 2
+
+[node name="Core4" parent="Layout/Rows/Body/CpuPanel/VBox/CoreGrid" instance=ExtResource("2_core")]
+layout_mode = 2
+index = 3
+
+[node name="Hint" type="Label" parent="Layout/Rows/Body/CpuPanel/VBox"]
+layout_mode = 2
+theme_type_variation = &"MutedLabel"
+theme_override_font_sizes/font_size = 12
+text = "Clique num processo e depois num núcleo (ou arraste).
+[1–4] núcleo · [Espaço] pausa · [Esc] desmarca · [C] efeito CRT
+Clique num núcleo ocupado (sem seleção) = preempção."
+autowrap_mode = 3
+
+[node name="IoPanel" type="PanelContainer" parent="Layout/Rows/Body"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="VBox" type="VBoxContainer" parent="Layout/Rows/Body/IoPanel"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="Title" type="Label" parent="Layout/Rows/Body/IoPanel/VBox"]
+layout_mode = 2
+theme_type_variation = &"TitleLabel"
+text = "BLOQUEADOS (E/S)"
+
+[node name="BlockedList" type="VBoxContainer" parent="Layout/Rows/Body/IoPanel/VBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 120)
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="LogTitle" type="Label" parent="Layout/Rows/Body/IoPanel/VBox"]
+layout_mode = 2
+theme_type_variation = &"TitleLabel"
+text = "LOG DO KERNEL"
+
+[node name="KernelLog" type="RichTextLabel" parent="Layout/Rows/Body/IoPanel/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_font_sizes/normal_font_size = 11
+scroll_following = true
+
+[node name="Footer" type="HBoxContainer" parent="Layout/Rows"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="PauseButton" type="Button" parent="Layout/Rows/Footer"]
+unique_name_in_owner = true
+layout_mode = 2
+focus_mode = 0
+text = "⏸ Pausar"
+
+[node name="AutopilotLabel" type="Label" parent="Layout/Rows/Footer"]
+layout_mode = 2
+theme_type_variation = &"MutedLabel"
+theme_override_font_sizes/font_size = 12
+text = "Piloto automático:"
+
+[node name="AutopilotOption" type="OptionButton" parent="Layout/Rows/Footer"]
+unique_name_in_owner = true
+layout_mode = 2
+focus_mode = 0
+selected = 0
+item_count = 6
+popup/item_0/text = "Desligado (você joga)"
+popup/item_1/text = "FCFS — primeiro a chegar"
+popup/item_1/id = 1
+popup/item_2/text = "SJF — menor job primeiro"
+popup/item_2/id = 2
+popup/item_3/text = "Round Robin"
+popup/item_3/id = 3
+popup/item_4/text = "Prioridade"
+popup/item_4/id = 4
+popup/item_5/text = "EDF — prazo mais cedo"
+popup/item_5/id = 5
+
+[node name="RestartButton" type="Button" parent="Layout/Rows/Footer"]
+unique_name_in_owner = true
+layout_mode = 2
+focus_mode = 0
+text = "↻ Reiniciar"
+
+[node name="CrtToggle" type="CheckButton" parent="Layout/Rows/Footer"]
+unique_name_in_owner = true
+layout_mode = 2
+focus_mode = 0
+button_pressed = true
+text = "Efeito CRT"
+
+[node name="Effects" type="CanvasLayer" parent="."]
+layer = 2
+
+[node name="FxLayer" type="Control" parent="Effects"]
+unique_name_in_owner = true
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Overlay" type="CanvasLayer" parent="."]
+unique_name_in_owner = true
+layer = 3
+
+[node name="Dim" type="ColorRect" parent="Overlay"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.02, 0.03, 0.06, 0.85)
+
+[node name="Center" type="CenterContainer" parent="Overlay/Dim"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Modal" type="PanelContainer" parent="Overlay/Dim/Center"]
+custom_minimum_size = Vector2(640, 0)
+layout_mode = 2
+theme_type_variation = &"Modal"
+
+[node name="VBox" type="VBoxContainer" parent="Overlay/Dim/Center/Modal"]
+layout_mode = 2
+theme_override_constants/separation = 14
+
+[node name="OverlayText" type="RichTextLabel" parent="Overlay/Dim/Center/Modal/VBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(600, 0)
+layout_mode = 2
+bbcode_enabled = true
+fit_content = true
+scroll_active = false
+
+[node name="OverlayButton" type="Button" parent="Overlay/Dim/Center/Modal/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+focus_mode = 0
+theme_type_variation = &"PrimaryButton"
+text = "INICIAR  [Enter]"
+
+[node name="PostFX" type="CanvasLayer" parent="."]
+layer = 10
+
+[node name="CRT" type="ColorRect" parent="PostFX"]
+unique_name_in_owner = true
+material = SubResource("ShaderMaterial_crt")
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2

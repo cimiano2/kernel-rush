@@ -4,12 +4,16 @@ Jogo educativo 2D feito em **Godot 4.3** em que você é o **escalonador de CPU*
 
 ![Tela do jogo](docs/screenshot.png)
 
+Quando a satisfação do usuário cai, o monitor CRT começa a falhar:
+
+![Sistema sob estresse](docs/estresse.png)
+
 ## Como jogar
 
 - **Clique** num processo e depois num núcleo, ou **arraste**. Atalhos: `1`–`4` escolhem o núcleo.
 - Clicar num núcleo ocupado sem nada selecionado faz **preempção**: o processo volta ao fim da fila.
 - Cada atribuição custa **0,4 s de troca de contexto**.
-- `Espaço` pausa, `Esc` desmarca a seleção.
+- `Espaço` pausa, `Esc` desmarca a seleção, `C` liga/desliga o efeito CRT.
 - Se a **satisfação do usuário** chegar a zero: *KERNEL PANIC*.
 
 | Tipo | Aparece em | Comportamento |
@@ -57,15 +61,27 @@ Cada push na `main` roda os testes, exporta para HTML5 e publica no **GitHub Pag
 ## Estrutura
 
 ```
-scenes/main.tscn      cena principal
-scripts/sim.gd        simulação pura (sem UI), testável
-scripts/main.gd       interface e loop do jogo
-scripts/proc_card.gd  cartão de processo (arrastável)
-scripts/core_slot.gd  núcleo da CPU (alvo do drop)
-scripts/ui_style.gd   paleta e estilos
-tests/test_sim.gd     testes headless
-tests/screenshot.gd   gera capturas de tela (precisa de display)
+scenes/main.tscn          cena principal (HUD, painéis, overlay, pós-processamento)
+scenes/proc_card.tscn     cartão de processo (instanciado em tempo de execução)
+scenes/core_slot.tscn     núcleo da CPU (4 instâncias em main.tscn)
+scripts/sim.gd            simulação pura (sem UI), testável
+scripts/sim_config.gd     Resource com os parâmetros de balanceamento
+scripts/main.gd           liga a interface à simulação
+scripts/proc_card.gd      cartão arrastável
+scripts/core_slot.gd      alvo do drag & drop
+scripts/ui_style.gd       paleta e recoloração dinâmica
+shaders/crt.gdshader      efeito de monitor CRT + glitch
+resources/theme.tres      tema visual (fonte, painéis, botões, variações)
+resources/sim_config.tres valores de balanceamento
+tests/test_sim.gd         testes headless (simulação + cenas)
+tests/screenshot.gd       gera capturas de tela (precisa de display)
 ```
+
+### Personalizando no editor
+
+- **Dificuldade:** abra `resources/sim_config.tres` no inspetor (troca de contexto, tempo por nível, intervalo de chegada, penalidades, níveis que liberam cada núcleo...).
+- **Visual:** abra `resources/theme.tres` no editor de temas. As variações `ProcCard`, `CoreSlot`, `Modal`, `PrimaryButton`, `StatValue` etc. controlam cada componente.
+- **Efeito CRT:** selecione `PostFX/CRT` em `main.tscn` e ajuste curvatura, scanlines, vinheta e aberração no material.
 
 ## Próximas ideias
 

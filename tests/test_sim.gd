@@ -101,5 +101,21 @@ func _init() -> void:
 			% [mode, s.time, s.level, s.completed, s.score, s.avg_wait(), s.game_over])
 		check(s.completed > 10, "piloto %s conclui processos" % mode)
 
+	# 8. cenas carregam e a interface encontra todos os nós
+	var main: Control = load("res://scenes/main.tscn").instantiate()
+	root.add_child(main)
+	await process_frame
+	check(main.sim != null and main._core_slots.size() == 4, "main.tscn monta 4 núcleos e cria a simulação")
+	check(main.config is SimConfig, "sim_config.tres atribuído na cena")
+	main._on_overlay_button()
+	main.sim.spawn_timer = 0.0
+	main.sim.tick()
+	main._refresh(0.0)
+	check(main._cards.size() == main.sim.ready.size() and main._cards.size() > 0, "cartões instanciados de proc_card.tscn")
+	var drop_pid: int = main.sim.ready[0].pid
+	main._on_core_dropped(drop_pid, 0)
+	check(main.sim.cores[0].proc != null and main.sim.cores[0].proc.pid == drop_pid, "drop num núcleo atribui o processo")
+	main.queue_free()
+
 	print("\n%s" % ("TODOS OS TESTES PASSARAM" if failures == 0 else "%d FALHA(S)" % failures))
 	quit(1 if failures > 0 else 0)

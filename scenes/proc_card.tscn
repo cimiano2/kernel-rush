@@ -1,0 +1,53 @@
+[gd_scene load_steps=2 format=3 uid="uid://b7kr0proccard"]
+
+[ext_resource type="Script" path="res://scripts/proc_card.gd" id="1_card"]
+
+[node name="ProcCard" type="PanelContainer"]
+theme_type_variation = &"ProcCard"
+script = ExtResource("1_card")
+
+[node name="Content" type="VBoxContainer" parent="."]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 3
+
+[node name="Header" type="HBoxContainer" parent="Content"]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="NameLabel" type="Label" parent="Content/Header"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+text = "processo  #100"
+
+[node name="TagLabel" type="Label" parent="Content/Header"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"MutedLabel"
+text = "CPU  P1"
+
+[node name="BurstBar" type="ProgressBar" parent="Content"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 6)
+layout_mode = 2
+mouse_filter = 2
+max_value = 1.0
+step = 0.0
+show_percentage = false
+
+[node name="WaitBar" type="ProgressBar" parent="Content"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 4)
+layout_mode = 2
+mouse_filter = 2
+theme_type_variation = &"ThinBar"
+max_value = 1.0
+step = 0.0
+show_percentage = false
+
+[node name="InfoLabel" type="Label" parent="Content"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"MutedLabel"
+text = "resta 0.0s"
